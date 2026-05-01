@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>innerworld</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@300;400;600&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+<style>
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/woff/OpenDyslexic-Regular.woff') format('woff');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/woff/OpenDyslexic-Bold.woff') format('woff');
+  font-weight: 700;
+}
+ 
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+:root {
+  --bg: #1a1a2e;
+  --surface: #16213e;
+  --surface2: #0f3460;
+  --accent: #e94560;
+  --accent2: #533483;
+  --text: #eee;
+  --text-muted: #aab;
+  --border: #2a2a4a;
+  --warning: #f0a500;
+  --radius: 10px;
+  --shadow: 0 2px 12px rgba(0,0,0,.3);
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --note-1: #fff3cd;
+  --note-2: #d1ecf1;
+  --note-3: #d4edda;
+  --note-4: #f8d7da;
+  --note-5: #e2d9f3;
+  --note-6: #fde2e4;
+  --note-text: #1a1a2e;
+}
+ 
+html, body { height: 100%; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  overflow: hidden;
+}
+ 
+/* ── Sidebar ── */
+.sidebar {
+  width: 280px;
+  min-width: 280px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+.sidebar-header {
+  padding: 20px 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-header h1 {
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.profile-selector {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: .9rem;
+  width: 100%;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23aab' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+.profile-selector:focus { outline: 2px solid var(--accent); }
+.board-list { flex: 1; overflow-y: auto; padding: 8px; }
+.board-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--radius);
+  cursor: pointer; transition: background .15s;
+  margin-bottom: 2px;
+}
+.board-item:hover { background: var(--surface2); }
+.board-item.active { background: var(--surface2); border-left: 3px solid var(--accent); }
+.board-item .avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.board-item .board-info { flex: 1; min-width: 0; }
+.board-item .board-name { font-weight: 600; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.board-item .board-preview { font-size: .75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.badge {
+  background: var(--accent); color: #fff; font-size: .7rem; font-weight: 700;
+  min-width: 20px; height: 20px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; padding: 0 6px;
+}
+.badge.hidden { display: none; }
+.divider { height: 1px; background: var(--border); margin: 8px 12px; }
+.section-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); padding: 4px 12px 6px; font-weight: 600; }
+.sidebar-footer {
+  padding: 12px; border-top: 1px solid var(--border);
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.sidebar-footer button {
+  flex: 1; padding: 8px; border: 1px solid var(--border);
+  border-radius: var(--radius); background: var(--surface2);
+  color: var(--text); cursor: pointer; font-size: .8rem;
+  font-family: var(--font); transition: background .15s; min-width: 70px;
+}
+.sidebar-footer button:hover { background: var(--accent2); }
+ 
+/* ── Main ── */
+.main { flex: 1; display: flex; flex-direction: column; height: 100vh; min-width: 0; }
+.main-header {
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+  background: var(--surface); display: flex; align-items: center; gap: 12px;
+}
+.main-header .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+.main-header .header-info h2 { font-size: 1.1rem; }
+.main-header .header-info p { font-size: .8rem; color: var(--text-muted); }
+.hamburger { display: none; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; padding: 4px; }
+ 
+/* ── Bulletin Board ── */
+.board-area {
+  flex: 1; overflow-y: auto; padding: 24px;
+}
+.bulletin {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.note {
+  border-radius: 6px;
+  padding: 16px;
+  position: relative;
+  color: var(--note-text);
+  box-shadow: 2px 3px 8px rgba(0,0,0,.15);
+  animation: noteIn .25s ease;
+  word-wrap: break-word;
+  transition: transform .15s;
+}
+.note:hover { transform: translateY(-2px); }
+@keyframes noteIn { from { opacity: 0; transform: scale(.95) rotate(-1deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+.note-header {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 8px; font-size: .75rem; font-weight: 700;
+}
+.note-header .sender-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.note-body { font-size: .88rem; line-height: 1.5; margin-bottom: 8px; }
+.note-body img { max-width: 100%; border-radius: 4px; margin-top: 6px; cursor: pointer; }
+.note-time { font-size: .65rem; opacity: .6; text-align: right; }
+.note-delete {
+  position: absolute; top: 6px; right: 8px;
+  background: none; border: none; cursor: pointer;
+  font-size: .85rem; opacity: .3; transition: opacity .15s;
+  color: var(--note-text); line-height: 1;
+}
+.note-delete:hover { opacity: .8; }
+ 
+.no-profile-banner {
+  background: var(--warning); color: #1a1a2e;
+  padding: 8px 16px; font-size: .85rem; text-align: center; font-weight: 600;
+}
+ 
+/* ── Compose ── */
+.compose {
+  padding: 12px 24px 16px; border-top: 1px solid var(--border);
+  background: var(--surface); display: flex; gap: 10px; align-items: flex-end;
+}
+.compose textarea {
+  flex: 1; background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px 14px; color: var(--text);
+  font-family: var(--font); font-size: .9rem; resize: none;
+  min-height: 42px; max-height: 120px; line-height: 1.4;
+}
+.compose textarea:focus { outline: 2px solid var(--accent); }
+.compose textarea::placeholder { color: var(--text-muted); }
+.compose-btns { display: flex; gap: 6px; }
+.compose-btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); width: 42px; height: 42px; border-radius: 50%;
+  cursor: pointer; font-size: 1.1rem; display: flex;
+  align-items: center; justify-content: center; transition: background .15s;
+  flex-shrink: 0;
+}
+.compose-btn:hover { background: var(--accent2); }
+.send-btn { background: var(--accent); border-color: var(--accent); color: #fff; }
+.send-btn:hover { filter: brightness(1.1); }
+ 
+/* ── Welcome ── */
+.welcome {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 40px; text-align: center;
+}
+.welcome h2 { font-size: 1.5rem; margin-bottom: 8px; }
+.welcome p { color: var(--text-muted); max-width: 420px; line-height: 1.5; margin-bottom: 12px; }
+.welcome button {
+  background: var(--accent); color: #fff; border: none; padding: 10px 24px;
+  border-radius: var(--radius); cursor: pointer; font-size: .9rem; font-family: var(--font);
+}
+.welcome button:hover { filter: brightness(1.1); }
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; color: var(--text-muted); gap: 8px; padding: 60px 20px;
+}
+.empty-state .empty-icon { font-size: 3rem; }
+ 
+/* ── Modals ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; animation: fadeIn .15s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-overlay.hidden { display: none; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px; width: 480px;
+  max-width: 92vw; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow);
+}
+.modal h3 { margin-bottom: 16px; font-size: 1.1rem; }
+.modal label { display: block; font-size: .8rem; color: var(--text-muted); margin-bottom: 4px; margin-top: 12px; }
+.modal label:first-of-type { margin-top: 0; }
+.modal input, .modal select, .modal textarea {
+  width: 100%; padding: 8px 12px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: .9rem; font-family: var(--font);
+}
+.modal input:focus, .modal select:focus, .modal textarea:focus { outline: 2px solid var(--accent); }
+.modal-actions { margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
+.modal-actions button {
+  padding: 8px 20px; border-radius: 8px; border: 1px solid var(--border);
+  cursor: pointer; font-size: .85rem; font-family: var(--font); transition: background .15s;
+}
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent) !important; }
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-secondary { background: var(--surface2); color: var(--text); }
+.btn-secondary:hover { background: var(--border); }
+.btn-danger { background: #c0392b; color: #fff; border-color: #c0392b !important; }
+.btn-danger:hover { filter: brightness(1.1); }
+ 
+.color-options { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.color-swatch {
+  width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+  border: 3px solid transparent; transition: border-color .15s, transform .1s;
+}
+.color-swatch:hover { transform: scale(1.15); }
+.color-swatch.selected { border-color: #fff; }
+ 
+.alter-manage-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 8px; margin-bottom: 4px;
+}
+.alter-manage-item:hover { background: var(--surface2); }
+.alter-manage-item .avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .9rem; }
+.alter-manage-item .alter-name { flex: 1; font-size: .9rem; }
+.alter-manage-item button {
+  background: none; border: 1px solid var(--border); color: var(--text-muted);
+  width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
+  font-size: .8rem; display: flex; align-items: center; justify-content: center;
+}
+.alter-manage-item button:hover { background: var(--surface2); color: var(--text); }
+ 
+/* Settings */
+.setting-group { margin-bottom: 16px; }
+.setting-group h4 { font-size: .9rem; margin-bottom: 8px; }
+.theme-cards { display: flex; gap: 10px; flex-wrap: wrap; }
+.theme-card {
+  width: 64px; height: 44px; border-radius: 8px; cursor: pointer;
+  border: 3px solid transparent; transition: border-color .15s, transform .1s;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.theme-card:hover { transform: scale(1.05); }
+.theme-card.selected { border-color: var(--accent); }
+.theme-card .tc-top { flex: 1; }
+.theme-card .tc-bot { height: 14px; }
+.theme-card-label { font-size: .65rem; color: var(--text-muted); text-align: center; margin-top: 2px; }
+.font-option {
+  display: inline-block; padding: 6px 14px; border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer; margin: 3px; font-size: .85rem;
+  transition: background .15s, border-color .15s; background: var(--surface2);
+  color: var(--text);
+}
+.font-option:hover { border-color: var(--accent); }
+.font-option.selected { border-color: var(--accent); background: var(--accent); color: #fff; }
+.setting-note { font-size: .75rem; color: var(--text-muted); margin-top: 4px; }
+ 
+/* Image lightbox */
+.lightbox {
+  position: fixed; inset: 0; background: rgba(0,0,0,.85);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; cursor: pointer;
+}
+.lightbox.hidden { display: none; }
+.lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
+ 
+/* Mobile */
+@media (max-width: 700px) {
+  .sidebar { position: fixed; left: -300px; top: 0; z-index: 50; transition: left .25s ease; box-shadow: var(--shadow); }
+  .sidebar.open { left: 0; }
+  .hamburger { display: block; }
+  .bulletin { grid-template-columns: 1fr; }
+  .mobile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 40; }
+  .mobile-overlay.hidden { display: none; }
+}
+ 
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+<style id="dynamicTheme"></style>
+</head>
+<body>
+ 
+<div class="mobile-overlay hidden" id="mobileOverlay" onclick="closeSidebar()"></div>
+ 
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h1>&#127760; innerworld</h1>
+    <select class="profile-selector" id="profileSelect" title="Select active profile">
+      <option value="">-- Select who you are --</option>
+    </select>
+  </div>
+  <div class="board-list" id="boardList"></div>
+  <div class="sidebar-footer">
+    <button onclick="openAddAlterModal()">+ Add</button>
+    <button onclick="openManageModal()">Manage</button>
+    <button onclick="openSettingsModal()">Settings</button>
+  </div>
+</aside>
+ 
+<div class="main" id="mainArea">
+  <div class="main-header" id="mainHeader">
+    <button class="hamburger" onclick="openSidebar()">&#9776;</button>
+    <div class="avatar" id="headerAvatar" style="background:#533483;">&#127760;</div>
+    <div class="header-info">
+      <h2 id="headerTitle">innerworld</h2>
+      <p id="headerSub">Welcome</p>
+    </div>
+  </div>
+  <div id="noProfileBanner" class="no-profile-banner" style="display:none;">Select a profile above to post messages.</div>
+  <div class="board-area" id="boardArea"></div>
+  <div class="compose" id="composeArea" style="display:none;">
+    <textarea id="messageInput" placeholder="Write a note to pin on this board..." rows="1" onkeydown="handleComposeKey(event)"></textarea>
+    <div class="compose-btns">
+      <button class="compose-btn" onclick="triggerImageUpload()" title="Attach image">&#128247;</button>
+      <button class="compose-btn send-btn" onclick="sendMessage()" title="Pin note">&#128204;</button>
+    </div>
+  </div>
+  <input type="file" id="imageUpload" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+</div>
+ 
+<!-- Lightbox -->
+<div class="lightbox hidden" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" alt="Full size image">
+</div>
+ 
+<!-- Add/Edit Alter Modal -->
+<div class="modal-overlay hidden" id="alterModal">
+  <div class="modal">
+    <h3 id="alterModalTitle">Add Alter</h3>
+    <label>Name *</label>
+    <input type="text" id="alterName" placeholder="Name" maxlength="40" />
+    <label>Pronouns</label>
+    <input type="text" id="alterPronouns" placeholder="e.g. they/them" maxlength="30" />
+    <label>Emoji / Icon</label>
+    <input type="text" id="alterEmoji" placeholder="e.g. &#127769;" maxlength="4" />
+    <label>Color</label>
+    <div class="color-options" id="colorOptions"></div>
+    <label>Theme Override</label>
+    <select id="alterThemeSelect">
+      <option value="">Use global theme</option>
+    </select>
+    <p class="setting-note">When viewing as this alter, use a different color scheme.</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeAlterModal()">Cancel</button>
+      <button class="btn-primary" id="alterSaveBtn" onclick="saveAlter()">Add</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- Manage Modal -->
+<div class="modal-overlay hidden" id="manageModal">
+  <div class="modal">
+    <h3>Manage Alters</h3>
+    <div id="manageList"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeManageModal()">Close</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- Settings Modal -->
+<div class="modal-overlay hidden" id="settingsModal">
+  <div class="modal">
+    <h3>Settings</h3>
+    <div class="setting-group">
+      <h4>Color Scheme</h4>
+      <div class="theme-cards" id="themeCards"></div>
+    </div>
+    <div class="setting-group">
+      <h4>Font</h4>
+      <div id="fontOptions"></div>
+      <p class="setting-note">OpenDyslexic and Atkinson Hyperlegible are designed for readability.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeSettingsModal()">Close</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- Confirm Delete Modal -->
+<div class="modal-overlay hidden" id="confirmModal">
+  <div class="modal">
+    <h3>Remove Note</h3>
+    <p id="confirmText" style="font-size:.9rem; line-height:1.5;"></p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+      <button class="btn-danger" id="confirmDeleteBtn">Remove</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- Confirm Delete Alter Modal -->
+<div class="modal-overlay hidden" id="confirmAlterModal">
+  <div class="modal">
+    <h3>Delete Alter</h3>
+    <p id="confirmAlterText" style="font-size:.9rem; line-height:1.5;"></p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeConfirmAlterModal()">Cancel</button>
+      <button class="btn-danger" id="confirmAlterDeleteBtn">Delete</button>
+    </div>
+  </div>
+</div>
+ 
+<script>
+/* ── Themes ── */
+const THEMES = {
+  midnight: { name: 'Midnight', bg: '#1a1a2e', surface: '#16213e', surface2: '#0f3460', accent: '#e94560', accent2: '#533483', text: '#eee', textMuted: '#aab', border: '#2a2a4a', noteColors: ['#fff3cd','#d1ecf1','#d4edda','#f8d7da','#e2d9f3','#fde2e4'] },
+  forest: { name: 'Forest', bg: '#1b2a1b', surface: '#1e3a1e', surface2: '#2d5a2d', accent: '#66bb6a', accent2: '#388e3c', text: '#e8f5e9', textMuted: '#a5d6a7', border: '#2e5a2e', noteColors: ['#e8f5e9','#fff9c4','#f3e5f5','#fce4ec','#e0f7fa','#fff3e0'] },
+  ocean: { name: 'Ocean', bg: '#0d1b2a', surface: '#1b2838', surface2: '#1e3a5f', accent: '#48cae4', accent2: '#0077b6', text: '#caf0f8', textMuted: '#90caf9', border: '#1e3a5f', noteColors: ['#e0f7fa','#fff9c4','#fce4ec','#e8f5e9','#f3e5f5','#fff3e0'] },
+  sunset: { name: 'Sunset', bg: '#2d1b00', surface: '#3e2723', surface2: '#5d4037', accent: '#ff8a65', accent2: '#e65100', text: '#fff3e0', textMuted: '#ffcc80', border: '#5d4037', noteColors: ['#fff3e0','#fce4ec','#fff9c4','#e8f5e9','#e0f7fa','#f3e5f5'] },
+  rose: { name: 'Rose', bg: '#2a1520', surface: '#3d1f33', surface2: '#5c2e4a', accent: '#f48fb1', accent2: '#c2185b', text: '#fce4ec', textMuted: '#f8bbd0', border: '#5c2e4a', noteColors: ['#fce4ec','#f3e5f5','#e0f7fa','#fff9c4','#e8f5e9','#fff3e0'] },
+  lavender: { name: 'Lavender', bg: '#1a1528', surface: '#25203a', surface2: '#3a3260', accent: '#b39ddb', accent2: '#7e57c2', text: '#ede7f6', textMuted: '#b39ddb', border: '#3a3260', noteColors: ['#ede7f6','#e0f7fa','#fff9c4','#fce4ec','#e8f5e9','#fff3e0'] },
+  cream: { name: 'Cream', bg: '#f5f0e8', surface: '#ebe3d5', surface2: '#ddd3c0', accent: '#c56c4c', accent2: '#8b5e3c', text: '#3e2c1c', textMuted: '#7a6555', border: '#d2c4aa', noteColors: ['#fff8e1','#e8f5e9','#e3f2fd','#fce4ec','#f3e5f5','#fff3e0'] },
+  highcontrast: { name: 'High Contrast', bg: '#000000', surface: '#111111', surface2: '#222222', accent: '#ffff00', accent2: '#00ff00', text: '#ffffff', textMuted: '#cccccc', border: '#444444', noteColors: ['#ffff99','#99ffcc','#99ccff','#ff9999','#cc99ff','#ffcc99'] },
+};
+ 
+const ALTER_COLORS = [
+  '#e94560','#533483','#0f3460','#4ecca3','#f0a500',
+  '#e84393','#6c5ce7','#00b894','#fd79a8','#00cec9',
+  '#d63031','#e17055','#a29bfe','#55efc4','#fab1a0',
+  '#74b9ff','#dfe6e9','#b2bec3',
+];
+ 
+const FONTS = [
+  { id: 'system', name: 'System', family: "'Segoe UI', system-ui, -apple-system, sans-serif" },
+  { id: 'opendyslexic', name: 'OpenDyslexic', family: "'OpenDyslexic', sans-serif" },
+  { id: 'atkinson', name: 'Atkinson', family: "'Atkinson Hyperlegible', sans-serif" },
+  { id: 'lexend', name: 'Lexend', family: "'Lexend', sans-serif" },
+  { id: 'comic', name: 'Comic Neue', family: "'Comic Neue', cursive" },
+];
+ 
+const SYSTEM_BOARD_ID = '__system__';
+ 
+/* ── State ── */
+let state = loadState();
+let activeBoardId = null;
+let pendingImage = null;
+ 
+function defaultState() {
+  return {
+    alters: [],
+    currentProfileId: '',
+    boards: { [SYSTEM_BOARD_ID]: [] },
+    readTimestamps: {},
+    settings: { theme: 'midnight', font: 'system' },
+  };
+}
+ 
+function loadState() {
+  try {
+    const raw = localStorage.getItem('innerworldState');
+    if (raw) {
+      const s = JSON.parse(raw);
+      if (!s.boards) s.boards = {};
+      if (!s.readTimestamps) s.readTimestamps = {};
+      if (!s.boards[SYSTEM_BOARD_ID]) s.boards[SYSTEM_BOARD_ID] = [];
+      if (!s.settings) s.settings = { theme: 'midnight', font: 'system' };
+      return s;
+    }
+  } catch(e) {}
+  return defaultState();
+}
+ 
+function saveState() { localStorage.setItem('innerworldState', JSON.stringify(state)); }
+ 
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function getAlter(id) { return state.alters.find(a => a.id === id); }
+function getAlterDisplay(id) { return getAlter(id) || { name: 'Unknown', emoji: '?', color: '#888' }; }
+ 
+/* ── Theme ── */
+function applyTheme(themeId) {
+  const t = THEMES[themeId];
+  if (!t) return;
+  const css = `:root {
+    --bg: ${t.bg}; --surface: ${t.surface}; --surface2: ${t.surface2};
+    --accent: ${t.accent}; --accent2: ${t.accent2}; --text: ${t.text};
+    --text-muted: ${t.textMuted}; --border: ${t.border};
+    --note-1: ${t.noteColors[0]}; --note-2: ${t.noteColors[1]};
+    --note-3: ${t.noteColors[2]}; --note-4: ${t.noteColors[3]};
+    --note-5: ${t.noteColors[4]}; --note-6: ${t.noteColors[5]};
+  }`;
+  document.getElementById('dynamicTheme').textContent = css;
+}
+ 
+function getActiveTheme() {
+  if (state.currentProfileId) {
+    const alter = getAlter(state.currentProfileId);
+    if (alter && alter.themeOverride && THEMES[alter.themeOverride]) return alter.themeOverride;
+  }
+  return state.settings.theme;
+}
+ 
+function applyActiveTheme() { applyTheme(getActiveTheme()); }
+ 
+function applyFont(fontId) {
+  const f = FONTS.find(x => x.id === fontId);
+  if (f) document.documentElement.style.setProperty('--font', f.family);
+}
+ 
+/* ── Unread ── */
+function getUnreadCount(profileId, boardId) {
+  if (!profileId) return 0;
+  const msgs = state.boards[boardId] || [];
+  const lastRead = (state.readTimestamps[profileId] || {})[boardId] || 0;
+  return msgs.filter(m => m.timestamp > lastRead).length;
+}
+ 
+function markBoardRead(profileId, boardId) {
+  if (!profileId) return;
+  if (!state.readTimestamps[profileId]) state.readTimestamps[profileId] = {};
+  state.readTimestamps[profileId][boardId] = Date.now();
+  saveState();
+}
+ 
+/* ── Render sidebar ── */
+function renderBoardList() {
+  const c = document.getElementById('boardList');
+  let html = '';
+  const sysUnread = getUnreadCount(state.currentProfileId, SYSTEM_BOARD_ID);
+  const sysActive = activeBoardId === SYSTEM_BOARD_ID ? 'active' : '';
+  const sysMsgs = state.boards[SYSTEM_BOARD_ID] || [];
+  const sysPrev = sysMsgs.length ? truncate(sysMsgs[sysMsgs.length - 1].text || '(image)', 28) : 'No notes yet';
+  html += `<div class="section-label">System</div>
+    <div class="board-item ${sysActive}" onclick="selectBoard('${SYSTEM_BOARD_ID}')">
+      <div class="avatar" style="background:#533483;">&#127760;</div>
+      <div class="board-info">
+        <div class="board-name">System Board</div>
+        <div class="board-preview">${esc(sysPrev)}</div>
+      </div>
+      <div class="badge ${sysUnread ? '' : 'hidden'}">${sysUnread}</div>
+    </div>`;
+  if (state.alters.length) {
+    html += '<div class="divider"></div><div class="section-label">Alters</div>';
+    for (const a of state.alters) {
+      const u = getUnreadCount(state.currentProfileId, a.id);
+      const act = activeBoardId === a.id ? 'active' : '';
+      const msgs = state.boards[a.id] || [];
+      const prev = msgs.length ? truncate(msgs[msgs.length - 1].text || '(image)', 28) : 'No notes yet';
+      html += `<div class="board-item ${act}" onclick="selectBoard('${a.id}')">
+        <div class="avatar" style="background:${a.color};">${a.emoji || a.name.charAt(0)}</div>
+        <div class="board-info">
+          <div class="board-name">${esc(a.name)}</div>
+          <div class="board-preview">${esc(prev)}</div>
+        </div>
+        <div class="badge ${u ? '' : 'hidden'}">${u}</div>
+      </div>`;
+    }
+  }
+  c.innerHTML = html;
+}
+ 
+function renderProfileSelect() {
+  const sel = document.getElementById('profileSelect');
+  let html = '<option value="">-- Select who you are --</option>';
+  for (const a of state.alters) {
+    const s = a.id === state.currentProfileId ? 'selected' : '';
+    html += `<option value="${a.id}" ${s}>${a.emoji || ''} ${esc(a.name)}</option>`;
+  }
+  sel.innerHTML = html;
+}
+ 
+/* ── Board ── */
+function selectBoard(boardId) {
+  activeBoardId = boardId;
+  markBoardRead(state.currentProfileId, boardId);
+  renderBoardList();
+  renderMainHeader();
+  renderBoard();
+  showCompose();
+  closeSidebar();
+}
+ 
+function renderMainHeader() {
+  const av = document.getElementById('headerAvatar');
+  const ti = document.getElementById('headerTitle');
+  const su = document.getElementById('headerSub');
+  if (!activeBoardId) {
+    av.style.background = '#533483'; av.innerHTML = '&#127760;';
+    ti.textContent = 'innerworld'; su.textContent = 'Select a board';
+    return;
+  }
+  if (activeBoardId === SYSTEM_BOARD_ID) {
+    av.style.background = '#533483'; av.innerHTML = '&#127760;';
+    ti.textContent = 'System Board'; su.textContent = 'Shared board for the whole system';
+  } else {
+    const a = getAlter(activeBoardId);
+    if (a) {
+      av.style.background = a.color; av.innerHTML = a.emoji || a.name.charAt(0);
+      ti.textContent = a.name + "'s Board"; su.textContent = a.pronouns || '';
+    }
+  }
+}
+ 
+function getNoteColor(index) {
+  const vars = ['var(--note-1)','var(--note-2)','var(--note-3)','var(--note-4)','var(--note-5)','var(--note-6)'];
+  return vars[index % vars.length];
+}
+ 
+function renderBoard() {
+  const area = document.getElementById('boardArea');
+  if (!activeBoardId) {
+    area.innerHTML = `<div class="welcome">
+      <h2>Welcome to innerworld</h2>
+      <p>A private bulletin board for your system. Add alters, pin notes to each other's boards, and keep track of communication.</p>
+      <p style="font-size:.85rem;">All data is stored locally in your browser. Nothing is sent anywhere.</p>
+      <button onclick="openAddAlterModal()">Add Your First Alter</button>
+    </div>`;
+    return;
+  }
+  const msgs = state.boards[activeBoardId] || [];
+  if (!msgs.length) {
+    area.innerHTML = `<div class="empty-state"><div class="empty-icon">&#128204;</div><p>No notes pinned here yet.</p></div>`;
+    return;
+  }
+  const canDelete = activeBoardId === state.currentProfileId || activeBoardId === SYSTEM_BOARD_ID;
+  let html = '<div class="bulletin">';
+  for (let i = 0; i < msgs.length; i++) {
+    const m = msgs[i];
+    const sender = getAlterDisplay(m.fromId);
+    const bg = getNoteColor(i);
+    const showDel = canDelete && state.currentProfileId;
+    html += `<div class="note" style="background:${bg};">
+      ${showDel ? `<button class="note-delete" onclick="confirmDeleteNote('${m.id}')" title="Remove note">&times;</button>` : ''}
+      <div class="note-header">
+        <span class="sender-dot" style="background:${sender.color}"></span>
+        ${esc(sender.name)}
+      </div>
+      <div class="note-body">${m.text ? esc(m.text) : ''}${m.image ? `<img src="${m.image}" alt="attached image" onclick="openLightbox(this.src)">` : ''}</div>
+      <div class="note-time">${formatTime(m.timestamp)}</div>
+    </div>`;
+  }
+  html += '</div>';
+  area.innerHTML = html;
+}
+ 
+function showCompose() {
+  const compose = document.getElementById('composeArea');
+  const banner = document.getElementById('noProfileBanner');
+  if (!activeBoardId) { compose.style.display = 'none'; banner.style.display = 'none'; return; }
+  if (!state.currentProfileId) { compose.style.display = 'none'; banner.style.display = ''; }
+  else { compose.style.display = ''; banner.style.display = 'none'; }
+}
+ 
+/* ── Send ── */
+function sendMessage() {
+  const input = document.getElementById('messageInput');
+  const text = input.value.trim();
+  if ((!text && !pendingImage) || !state.currentProfileId || !activeBoardId) return;
+  if (!state.boards[activeBoardId]) state.boards[activeBoardId] = [];
+  const msg = { id: genId(), fromId: state.currentProfileId, text, timestamp: Date.now() };
+  if (pendingImage) { msg.image = pendingImage; pendingImage = null; }
+  state.boards[activeBoardId].push(msg);
+  saveState();
+  input.value = '';
+  autoResize(input);
+  markBoardRead(state.currentProfileId, activeBoardId);
+  renderBoard();
+  renderBoardList();
+}
+ 
+function handleComposeKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+ 
+/* ── Image upload ── */
+function triggerImageUpload() { document.getElementById('imageUpload').click(); }
+ 
+function handleImageUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const img = new Image();
+    img.onload = function() {
+      const MAX = 600;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      pendingImage = canvas.toDataURL('image/jpeg', 0.7);
+      const input = document.getElementById('messageInput');
+      if (!input.value.trim()) input.placeholder = '(image attached) Add a caption or just pin it...';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+ 
+/* ── Lightbox ── */
+function openLightbox(src) { document.getElementById('lightboxImg').src = src; document.getElementById('lightbox').classList.remove('hidden'); }
+function closeLightbox() { document.getElementById('lightbox').classList.add('hidden'); }
+ 
+/* ── Delete note ── */
+function confirmDeleteNote(msgId) {
+  document.getElementById('confirmText').textContent = 'Remove this note from the board?';
+  document.getElementById('confirmDeleteBtn').onclick = () => deleteNote(msgId);
+  document.getElementById('confirmModal').classList.remove('hidden');
+}
+function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); }
+function deleteNote(msgId) {
+  if (!activeBoardId) return;
+  const isOwnBoard = activeBoardId === state.currentProfileId;
+  const isSystemBoard = activeBoardId === SYSTEM_BOARD_ID;
+  if (!isOwnBoard && !isSystemBoard) return;
+  state.boards[activeBoardId] = (state.boards[activeBoardId] || []).filter(m => m.id !== msgId);
+  saveState();
+  closeConfirmModal();
+  renderBoard();
+  renderBoardList();
+}
+ 
+/* ── Auto-resize textarea ── */
+const msgInput = document.getElementById('messageInput');
+msgInput.addEventListener('input', function() { autoResize(this); this.placeholder = 'Write a note to pin on this board...'; });
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+ 
+/* ── Profile change ── */
+document.getElementById('profileSelect').addEventListener('change', function() {
+  state.currentProfileId = this.value;
+  saveState();
+  applyActiveTheme();
+  if (activeBoardId) markBoardRead(state.currentProfileId, activeBoardId);
+  renderBoardList();
+  renderBoard();
+  showCompose();
+});
+ 
+/* ── Add/Edit Alter ── */
+let editingAlterId = null;
+let selectedColor = ALTER_COLORS[0];
+ 
+function buildColorPicker() {
+  document.getElementById('colorOptions').innerHTML = ALTER_COLORS.map(c =>
+    `<div class="color-swatch ${c === selectedColor ? 'selected' : ''}" style="background:${c}" onclick="pickColor('${c}')"></div>`
+  ).join('');
+}
+function pickColor(c) { selectedColor = c; buildColorPicker(); }
+ 
+function buildAlterThemeSelect(current) {
+  const sel = document.getElementById('alterThemeSelect');
+  let html = '<option value="">Use global theme</option>';
+  for (const [k, t] of Object.entries(THEMES)) {
+    html += `<option value="${k}" ${k === current ? 'selected' : ''}>${t.name}</option>`;
+  }
+  sel.innerHTML = html;
+}
+ 
+function openAddAlterModal() {
+  editingAlterId = null;
+  document.getElementById('alterModalTitle').textContent = 'Add Alter';
+  document.getElementById('alterSaveBtn').textContent = 'Add';
+  document.getElementById('alterName').value = '';
+  document.getElementById('alterPronouns').value = '';
+  document.getElementById('alterEmoji').value = '';
+  selectedColor = ALTER_COLORS[Math.floor(Math.random() * ALTER_COLORS.length)];
+  buildColorPicker();
+  buildAlterThemeSelect('');
+  document.getElementById('alterModal').classList.remove('hidden');
+}
+ 
+function openEditAlterModal(id) {
+  const a = getAlter(id);
+  if (!a) return;
+  editingAlterId = id;
+  document.getElementById('alterModalTitle').textContent = 'Edit Alter';
+  document.getElementById('alterSaveBtn').textContent = 'Save';
+  document.getElementById('alterName').value = a.name;
+  document.getElementById('alterPronouns').value = a.pronouns || '';
+  document.getElementById('alterEmoji').value = a.emoji || '';
+  selectedColor = a.color;
+  buildColorPicker();
+  buildAlterThemeSelect(a.themeOverride || '');
+  document.getElementById('alterModal').classList.remove('hidden');
+  closeManageModal();
+}
+ 
+function closeAlterModal() { document.getElementById('alterModal').classList.add('hidden'); }
+ 
+function saveAlter() {
+  const name = document.getElementById('alterName').value.trim();
+  if (!name) { document.getElementById('alterName').focus(); return; }
+  const pronouns = document.getElementById('alterPronouns').value.trim();
+  const emoji = document.getElementById('alterEmoji').value.trim();
+  const themeOverride = document.getElementById('alterThemeSelect').value;
+  if (editingAlterId) {
+    const a = getAlter(editingAlterId);
+    if (a) { a.name = name; a.pronouns = pronouns; a.emoji = emoji; a.color = selectedColor; a.themeOverride = themeOverride; }
+  } else {
+    const id = genId();
+    state.alters.push({ id, name, pronouns, emoji, color: selectedColor, themeOverride });
+    if (!state.boards[id]) state.boards[id] = [];
+  }
+  saveState();
+  closeAlterModal();
+  applyActiveTheme();
+  renderAll();
+}
+ 
+/* ── Manage ── */
+function openManageModal() {
+  const list = document.getElementById('manageList');
+  if (!state.alters.length) {
+    list.innerHTML = '<p style="color:var(--text-muted);font-size:.9rem;">No alters added yet.</p>';
+  } else {
+    list.innerHTML = state.alters.map(a => `
+      <div class="alter-manage-item">
+        <div class="avatar" style="background:${a.color};">${a.emoji || a.name.charAt(0)}</div>
+        <div class="alter-name">${esc(a.name)} ${a.pronouns ? '<span style="color:var(--text-muted);font-size:.75rem;">(' + esc(a.pronouns) + ')</span>' : ''}</div>
+        <button onclick="openEditAlterModal('${a.id}')" title="Edit">&#9998;</button>
+        <button onclick="confirmDeleteAlter('${a.id}')" title="Delete">&#128465;</button>
+      </div>
+    `).join('');
+  }
+  document.getElementById('manageModal').classList.remove('hidden');
+}
+function closeManageModal() { document.getElementById('manageModal').classList.add('hidden'); }
+ 
+function confirmDeleteAlter(id) {
+  const a = getAlter(id);
+  if (!a) return;
+  document.getElementById('confirmAlterText').textContent = `Delete "${a.name}"? Their board and all notes will be removed. This cannot be undone.`;
+  document.getElementById('confirmAlterDeleteBtn').onclick = () => deleteAlter(id);
+  document.getElementById('confirmAlterModal').classList.remove('hidden');
+  closeManageModal();
+}
+function closeConfirmAlterModal() { document.getElementById('confirmAlterModal').classList.add('hidden'); }
+ 
+function deleteAlter(id) {
+  state.alters = state.alters.filter(a => a.id !== id);
+  delete state.boards[id];
+  for (const pid in state.readTimestamps) delete state.readTimestamps[pid][id];
+  delete state.readTimestamps[id];
+  if (state.currentProfileId === id) state.currentProfileId = '';
+  if (activeBoardId === id) activeBoardId = null;
+  saveState();
+  closeConfirmAlterModal();
+  applyActiveTheme();
+  renderAll();
+}
+ 
+/* ── Settings ── */
+function openSettingsModal() {
+  renderThemeCards();
+  renderFontOptions();
+  document.getElementById('settingsModal').classList.remove('hidden');
+}
+function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+ 
+function renderThemeCards() {
+  const c = document.getElementById('themeCards');
+  let html = '';
+  for (const [k, t] of Object.entries(THEMES)) {
+    const sel = state.settings.theme === k ? 'selected' : '';
+    html += `<div style="text-align:center;">
+      <div class="theme-card ${sel}" onclick="setTheme('${k}')">
+        <div class="tc-top" style="background:${t.bg};"></div>
+        <div class="tc-bot" style="background:${t.accent};"></div>
+      </div>
+      <div class="theme-card-label">${t.name}</div>
+    </div>`;
+  }
+  c.innerHTML = html;
+}
+ 
+function renderFontOptions() {
+  const c = document.getElementById('fontOptions');
+  c.innerHTML = FONTS.map(f =>
+    `<span class="font-option ${state.settings.font === f.id ? 'selected' : ''}" style="font-family:${f.family}" onclick="setFont('${f.id}')">${f.name}</span>`
+  ).join('');
+}
+ 
+function setTheme(id) {
+  state.settings.theme = id;
+  saveState();
+  applyActiveTheme();
+  renderThemeCards();
+}
+ 
+function setFont(id) {
+  state.settings.font = id;
+  saveState();
+  applyFont(id);
+  renderFontOptions();
+}
+ 
+/* ── Mobile sidebar ── */
+function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('mobileOverlay').classList.remove('hidden'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('mobileOverlay').classList.add('hidden'); }
+ 
+/* ── Utilities ── */
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function truncate(s, n) { return s.length > n ? s.slice(0, n) + '...' : s; }
+function formatTime(ts) {
+  const d = new Date(ts), now = new Date();
+  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (d.toDateString() === now.toDateString()) return time;
+  const y = new Date(now); y.setDate(y.getDate() - 1);
+  if (d.toDateString() === y.toDateString()) return 'Yesterday ' + time;
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + time;
+}
+ 
+/* ── Render all ── */
+function renderAll() {
+  renderProfileSelect();
+  renderBoardList();
+  renderMainHeader();
+  renderBoard();
+  showCompose();
+}
+ 
+/* ── Init ── */
+applyActiveTheme();
+applyFont(state.settings.font);
+renderAll();
+</script>
+</body>
+</htm
